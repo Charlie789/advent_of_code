@@ -11,56 +11,99 @@ class Position:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.on_moved = None
+        self.to_follow = None
 
     def move_up(self):
         self.y += 1
+        if self.on_moved:
+            self.on_moved()
 
     def move_down(self):
         self.y -= 1
+        if self.on_moved:
+            self.on_moved()
 
     def move_left(self):
         self.x -= 1
+        if self.on_moved:
+            self.on_moved()
 
     def move_right(self):
         self.x += 1
+        if self.on_moved:
+            self.on_moved()
 
     def move_diag_up_left(self):
-        self.move_up()
-        self.move_left()
+        self.y += 1
+        self.x -= 1
+        if self.on_moved:
+            self.on_moved()
 
     def move_diag_up_right(self):
-        self.move_up()
-        self.move_right()
+        self.y += 1
+        self.x += 1
+        if self.on_moved:
+            self.on_moved()
 
     def move_diag_down_left(self):
-        self.move_down()
-        self.move_left()
+        self.y -= 1
+        self.x -= 1
+        if self.on_moved:
+            self.on_moved()
 
     def move_diag_down_right(self):
-        self.move_down()
-        self.move_right()
+        self.y -= 1
+        self.x += 1
+        if self.on_moved:
+            self.on_moved()
+
+    def follow_to(self):
+        p = self.to_follow
+
+        distance = Position.distance(self, p)
+
+        if distance < 2:
+            return
+        elif distance == 2:
+            if self.x - p.x == 2:
+                self.move_left()
+            elif self.x - p.x == -2:
+                self.move_right()
+            elif self.y - p.y == 2:
+                self.move_down()
+            elif self.y - p.y == -2:
+                self.move_up()
+        else:
+            if self.x - p.x > 0 and self.y - p.y > 0:
+                self.move_diag_down_left()
+            elif self.x - p.x > 0 and self.y - p.y < 0:
+                self.move_diag_up_left()
+            elif self.x - p.x < 0 and self.y - p.y > 0:
+                self.move_diag_down_right()
+            elif self.x - p.x < 0 and self.y - p.y < 0:
+                self.move_diag_up_right()
 
     @staticmethod
     def distance(p1: "Position", p2: "Position"):
         return math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2)
 
 class Rope:
-    def __init__(self):
-        self.head_position = Position(0, 0)
-        self.tail_position = Position(0, 0)
+    def __init__(self, points):
+        self.points = [Position(0, 0) for _ in range(points)]
+
+        for i in range(1, points):
+            self.points[i - 1].on_moved = self.points[i].follow_to
+            self.points[i].to_follow = self.points[i - 1]
+
+
+        self.head_position = self.points[0]
+        self.tail_position = self.points[-1]
+        self.tail_position.on_moved = self.save_position
         self.visited_positions: Set[Tuple[int, int]] = {(0, 0)}
 
     def save_position(self):
         self.visited_positions.add((self.tail_position.x, self.tail_position.y))
-
-    def distance(self):
-        return Position.distance(self.tail_position, self.head_position)
-
-    def distance_x(self):
-        return self.head_position.x - self.tail_position.x
-
-    def distance_y(self):
-        return self.head_position.y - self.tail_position.y
 
     def perform_move(self, move: Move):
         if move.direction == "L":
@@ -78,55 +121,15 @@ class Rope:
 
     def move_left(self):
         self.head_position.move_left()
-        if self.distance() < 2:
-            return
-        if self.distance() == 2:
-            self.tail_position.move_left()
-        else:
-            if self.distance_y() == 1:
-                self.tail_position.move_diag_up_left()
-            if self.distance_y() == -1:
-                self.tail_position.move_diag_down_left()
-        self.save_position()
 
     def move_right(self):
         self.head_position.move_right()
-        if self.distance() < 2:
-            return
-        if self.distance() == 2:
-            self.tail_position.move_right()
-        else:
-            if self.distance_y() == 1:
-                self.tail_position.move_diag_up_right()
-            if self.distance_y() == -1:
-                self.tail_position.move_diag_down_right()
-        self.save_position()
 
     def move_up(self):
         self.head_position.move_up()
-        if self.distance() < 2:
-            return
-        if self.distance() == 2:
-            self.tail_position.move_up()
-        else:
-            if self.distance_x() == 1:
-                self.tail_position.move_diag_up_right()
-            if self.distance_x() == -1:
-                self.tail_position.move_diag_up_left()
-        self.save_position()
 
     def move_down(self):
         self.head_position.move_down()
-        if self.distance() < 2:
-            return
-        if self.distance() == 2:
-            self.tail_position.move_down()
-        else:
-            if self.distance_x() == 1:
-                self.tail_position.move_diag_down_right()
-            if self.distance_x() == -1:
-                self.tail_position.move_diag_down_left()
-        self.save_position()
 
 
 def parse(raw_input):
@@ -136,14 +139,17 @@ def parse(raw_input):
 
 
 def task1(parsed_input):
-    rope = Rope()
+    rope = Rope(2)
     for move in parsed_input:
         rope.perform_move(move)
     return len(rope.visited_positions)
 
 
 def task2(parsed_input):
-    return parsed_input
+    rope = Rope(10)
+    for move in parsed_input:
+        rope.perform_move(move)
+    return len(rope.visited_positions)
 
 
 if __name__ == "__main__":
