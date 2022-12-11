@@ -13,7 +13,7 @@ def example():
 def test_task1(example):
     assert aoc.task1(example) == 13140
 
-#
-# @pytest.mark.skip
+
+@pytest.mark.skip
 def test_task2(example):
     assert aoc.task2(example) == 1
