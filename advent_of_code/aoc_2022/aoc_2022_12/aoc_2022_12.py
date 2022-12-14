@@ -1,5 +1,4 @@
 from pathlib import Path
-from copy import deepcopy
 from string import ascii_lowercase
 import numpy as np
 from collections import namedtuple
