@@ -24,17 +24,17 @@ def task1(parsed_input):
     return total_points
 
 
-
 def task2(parsed_input):
-    def _handle_card(card_id):
-        cards[card_id]["count"] += 1
-        for i in range(1, cards[card_id]["winnings"] + 1):
-            _handle_card(card_id + i)
+    sum_ = 0
+    def _handle_card(_card_id):
+        nonlocal sum_
+        sum_ += 1
+        for i in range(1, number_of_wins_per_card[_card_id] + 1):
+            _handle_card(_card_id + i)
 
-    cards = {i: {"winnings": len(winning.intersection(my_numbers)), "count": 0} for i, (winning, my_numbers) in enumerate(parsed_input)}
-    for card_id in range(len(cards)):
+    number_of_wins_per_card = [len(winning.intersection(my_numbers)) for winning, my_numbers in parsed_input]
+    for card_id in range(len(number_of_wins_per_card)):
         _handle_card(card_id)
-    sum_ = sum((x["count"] for x in cards.values()))
     return sum_
 
 if __name__ == "__main__":
